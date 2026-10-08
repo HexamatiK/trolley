@@ -152,6 +152,11 @@ button{cursor:pointer}
 .btn.secondary{border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .btn.primary{border:0;background:var(--primary-bg);color:var(--primary-fg)}
 .danger{border:0;background:transparent;color:var(--warn);font-weight:700;min-height:44px}
+.test-row{display:flex;flex-direction:column;gap:8px}
+.test-row .btn{height:48px}
+#testOut{overflow-wrap:anywhere}
+#testOut.ok{color:var(--accent);font-weight:700}
+#testOut.bad{color:var(--warn);font-weight:600}
 .retake{border:0;background:transparent;font-size:14px;font-weight:700;color:var(--accent);min-height:44px;padding:0 4px}
 
 .toast{position:fixed;left:16px;right:16px;bottom:calc(150px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:528px;background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 8px 8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:15px;z-index:30;box-shadow:0 12px 30px rgba(0,0,0,.25)}
@@ -294,6 +299,10 @@ button{cursor:pointer}
     <div class="field">
       <label for="model">Reader</label>
       <select id="model"></select>
+    </div>
+    <div id="testRow" class="test-row">
+      <button id="testKey" class="btn secondary" type="button">Test key</button>
+      <p id="testOut" class="help" role="status"></p>
     </div>
     <div id="setErr" class="err" hidden></div>
     <div class="actions">
@@ -461,87 +470,129 @@ button{cursor:pointer}
     required: ['found', 'name', 'price']
   };
 
-  async function callGemini(model, base64, signal, withThinking) {
-    const generationConfig = {
-      responseMimeType: 'application/json',
-      responseSchema: GEMINI_SCHEMA,
-      temperature: 0,
-      maxOutputTokens: 2048
-    };
-    if (withThinking) generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+  const GEMINI_FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
+  const GEMINI_JSON_HINT = '\nAnswer only with one JSON object, no other text, in this shape: {"found": true, "name": "Dalda cooking oil 3 L", "price": 1780, "old_price": null, "problem": ""}';
+
+  async function geminiRequest(model, payload, signal) {
     let resp;
     try {
       resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
         method: 'POST',
         signal,
         headers: { 'content-type': 'application/json', 'x-goog-api-key': settings.keys.gemini },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM + '\nAnswer only with the JSON object described by the schema.' }] },
-          contents: [{ role: 'user', parts: [
-            { inlineData: { mimeType: 'image/jpeg', data: base64 } },
-            { text: 'Read this price tag.' }
-          ] }],
-          generationConfig
-        })
+        body: JSON.stringify(payload)
       });
     } catch (e) {
       if (e && e.name === 'AbortError') throw e;
-      throw new ReadError('network', 'No internet connection reached Google. Check your signal, then retake or type the price.');
+      return { status: 0, body: null, netError: true };
     }
     let body = null;
     try { body = await resp.json(); } catch (e) {}
-    return { resp, body };
+    return { status: resp.status, body };
   }
 
-  async function readWithGemini(base64, signal) {
-    const primary = settings.models.gemini;
-    const other = PROVIDERS.gemini.models.map((m) => m[0]).find((m) => m !== primary);
-    let model = primary;
-    let { resp, body } = await callGemini(model, base64, signal, true);
-    const errOf = (b) => (b && b.error) || {};
-    const keyProblem = (b) => /API_KEY|api key/i.test(JSON.stringify(errOf(b)));
+  function geminiErrText(res) {
+    if (res.netError) return 'no connection';
+    const e = (res.body && res.body.error) || {};
+    const msg = String(e.message || '').replace(/\s+/g, ' ').slice(0, 140);
+    return res.status + (e.status ? ' ' + e.status : '') + (msg ? ': ' + msg : '');
+  }
+  function isKeyError(res) {
+    const txt = JSON.stringify((res.body && res.body.error) || {});
+    return res.status === 401 || res.status === 403 || /API_KEY|api key|PERMISSION_DENIED|UNAUTHENTICATED|SERVICE_DISABLED/i.test(txt);
+  }
 
-    // Unknown thinking setting on this model: ask again without it.
-    if (resp.status === 400 && !keyProblem(body) && /think/i.test(errOf(body).message || '')) {
-      ({ resp, body } = await callGemini(model, base64, signal, false));
-    }
-    // Model not available on this key: try the other free model once.
-    if ((resp.status === 404 || (resp.status === 400 && /model/i.test(errOf(body).message || '') && !keyProblem(body))) && other) {
-      model = other;
-      ({ resp, body } = await callGemini(model, base64, signal, false));
-      if (resp.ok) { settings.models.gemini = model; saveSettings(); }
-    }
+  function buildGeminiPayload(base64, mode) {
+    const generationConfig = { temperature: 0, maxOutputTokens: 2048, responseMimeType: 'application/json' };
+    if (mode.schema) generationConfig.responseSchema = GEMINI_SCHEMA;
+    if (mode.thinking) generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+    const prompt = SYSTEM + GEMINI_JSON_HINT;
+    const payload = {
+      contents: [{ role: 'user', parts: [
+        { inlineData: { mimeType: 'image/jpeg', data: base64 } },
+        { text: mode.system ? 'Read this price tag.' : prompt + '\n\nRead this price tag.' }
+      ] }],
+      generationConfig
+    };
+    if (mode.system) payload.systemInstruction = { parts: [{ text: prompt }] };
+    return payload;
+  }
 
-    if (!resp.ok) {
-      const e = errOf(body);
-      if (keyProblem(body) || resp.status === 401) throw new ReadError('key', 'Google did not accept your API key. Open Settings and paste it again.');
-      if (resp.status === 403) throw new ReadError('key', 'Your key is not allowed to use Gemini. Create a new key in Google AI Studio.');
-      if (resp.status === 429) throw new ReadError('busy', 'Free scan limit reached for now. Wait a minute and retake, or type the price.');
-      if (resp.status === 503 || resp.status === 500) throw new ReadError('busy', 'Gemini is busy right now. Retake in a moment, or type the price.');
-      throw new ReadError('other', 'Gemini could not read this one (' + resp.status + (e.status ? ' ' + e.status : '') + '). Retake or type the price.');
-    }
-
+  function parseGemini(body) {
     const cand = body && body.candidates && body.candidates[0];
     const parts = (cand && cand.content && cand.content.parts) || [];
     const text = parts.filter((p) => !p.thought && typeof p.text === 'string').map((p) => p.text).join('');
-    let r = {};
-    try {
-      r = JSON.parse(text);
-    } catch (e) {
+    let r = null;
+    try { r = JSON.parse(text); } catch (e) {
       const m = text.match(/\{[\s\S]*\}/);
-      try { r = m ? JSON.parse(m[0]) : {}; } catch (e2) { r = {}; }
+      try { r = m ? JSON.parse(m[0]) : null; } catch (e2) { r = null; }
     }
+    if (!r || typeof r !== 'object') return null;
     return {
       found: !!r.found,
       name: r.name ? String(r.name).trim().slice(0, 60) : '',
       price: r.price != null ? num(r.price) : 0,
       oldPrice: r.old_price != null ? num(r.old_price) : 0,
-      problem: r.problem ? String(r.problem).slice(0, 50) : (cand && cand.finishReason && cand.finishReason !== 'STOP' ? 'blocked or cut short' : '')
+      problem: r.problem ? String(r.problem).slice(0, 50) : ''
     };
   }
 
-  const readPrice = (base64, signal) =>
-    settings.provider === 'claude' ? readWithClaude(base64, signal) : readWithGemini(base64, signal);
+  // Tries the chosen model first, then simpler request shapes and other free models,
+  // so one model being overloaded or rejecting a setting does not stop the scan.
+  async function readWithGemini(base64, signal, onTry) {
+    const models = [settings.models.gemini].concat(GEMINI_FALLBACK_MODELS.filter((m) => m !== settings.models.gemini));
+    const plan = [
+      { model: models[0], schema: true, thinking: true, system: true },
+      { model: models[0], schema: false, thinking: false, system: true },
+      { model: models[1], schema: false, thinking: false, system: false },
+      { model: models[2], schema: false, thinking: false, system: false },
+      { model: models[3], schema: false, thinking: false, system: false }
+    ];
+    const errors = [];
+    const deadModels = new Set();
+    for (let i = 0; i < plan.length; i++) {
+      const step = plan[i];
+      if (deadModels.has(step.model)) continue;
+      if (onTry && i > 0) onTry('Trying again (' + (i + 1) + ')…');
+      const res = await geminiRequest(step.model, buildGeminiPayload(base64, step), signal);
+      if (res.status >= 200 && res.status < 300) {
+        const parsed = parseGemini(res.body);
+        if (parsed) {
+          if (step.model !== settings.models.gemini && i >= 2) { settings.models.gemini = step.model; saveSettings(); }
+          return parsed;
+        }
+        errors.push(step.model + ': unreadable reply');
+        continue;
+      }
+      if (res.netError) throw new ReadError('network', 'No internet connection reached Google. Check your signal, then retake or type the price.');
+      if (isKeyError(res)) {
+        throw new ReadError('key', 'Google refused the key. Open Settings, tap Test key, and send me what it says. (' + geminiErrText(res) + ')');
+      }
+      errors.push(step.model + ' ' + geminiErrText(res));
+      if (res.status === 404 || res.status === 429) deadModels.add(step.model);
+    }
+    const last = errors[errors.length - 1] || 'unknown';
+    if (/429|RESOURCE_EXHAUSTED/.test(errors.join(' '))) {
+      throw new ReadError('busy', 'Free scan limit reached for now. Wait a minute, or type the price. (' + last + ')');
+    }
+    throw new ReadError('other', 'Gemini could not read it. Google said: ' + last);
+  }
+
+  async function testGeminiKey() {
+    const model = settings.models.gemini || GEMINI_FALLBACK_MODELS[0];
+    const tried = [];
+    for (const m of [model].concat(GEMINI_FALLBACK_MODELS.filter((x) => x !== model))) {
+      const res = await geminiRequest(m, { contents: [{ role: 'user', parts: [{ text: 'Reply with the single word OK.' }] }] });
+      if (res.status >= 200 && res.status < 300) return { ok: true, text: 'Key works with ' + m + '.' + (tried.length ? ' (' + tried.join('; ') + ')' : '') };
+      if (res.netError) return { ok: false, text: 'No internet connection reached Google.' };
+      tried.push(m + ' ' + geminiErrText(res));
+      if (isKeyError(res)) break;
+    }
+    return { ok: false, text: 'Not working. Google said: ' + tried.join(' | ') };
+  }
+
+  const readPrice = (base64, signal, onTry) =>
+    settings.provider === 'claude' ? readWithClaude(base64, signal) : readWithGemini(base64, signal, onTry);
 
   /* ---------- Images ---------- */
   function canvasFromSource(src, w, h) {
@@ -682,10 +733,10 @@ button{cursor:pointer}
     setStatus((settings.provider === 'claude' ? 'Claude' : 'Gemini') + ' is reading the price…', 'busy');
     const ctl = new AbortController();
     sheet.ctl = ctl;
-    const timer = setTimeout(() => ctl.abort(), 30000);
+    const timer = setTimeout(() => ctl.abort(), 45000);
     const t0 = performance.now();
     try {
-      const r = await readPrice(shot.base64, ctl.signal);
+      const r = await readPrice(shot.base64, ctl.signal, (m) => { if (sheet.ctl === ctl) setStatus(m, 'busy'); });
       if (sheet.ctl !== ctl) return;
       sheet.ctl = null;
       if (r.name && !sheet.dirtyName) $('fName').value = r.name;
@@ -760,6 +811,9 @@ button{cursor:pointer}
     sel.value = cfg.models.some((m) => m[0] === draft.models[p]) ? draft.models[p] : cfg.models[0][0];
     $('forgetKey').hidden = !settings.keys[p];
     $('setErr').hidden = true;
+    $('testRow').hidden = p !== 'gemini';
+    $('testOut').textContent = '';
+    $('testOut').className = 'help';
   }
   function openSettings(needKey) {
     draft = { provider: settings.provider, keys: Object.assign({}, settings.keys), models: Object.assign({}, settings.models) };
@@ -929,6 +983,29 @@ button{cursor:pointer}
     saveSettings();
     closeSettings();
     toast(k ? 'Saved. Tap Scan price tag to start.' : 'Saved');
+  });
+  $('testKey').addEventListener('click', async () => {
+    const out = $('testOut');
+    const p = $('provider').value;
+    const k = $('apiKey').value.replace(/\s+/g, '');
+    out.className = 'help';
+    if (p !== 'gemini') { out.textContent = 'Test is for the Gemini key. For Claude, just try a scan.'; return; }
+    if (!k) { out.textContent = 'Paste your key first.'; return; }
+    const saved = settings.keys.gemini;
+    settings.keys.gemini = k;
+    out.textContent = 'Testing…';
+    $('testKey').disabled = true;
+    try {
+      const r = await testGeminiKey();
+      out.className = 'help ' + (r.ok ? 'ok' : 'bad');
+      out.textContent = r.text;
+    } catch (e) {
+      out.className = 'help bad';
+      out.textContent = 'Test failed: ' + (e && e.message ? e.message : 'unknown error');
+    } finally {
+      settings.keys.gemini = saved;
+      $('testKey').disabled = false;
+    }
   });
   $('provider').addEventListener('change', () => {
     const prev = draft.provider;
