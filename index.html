@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trolley">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F3F5F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1612" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACDklEQVR42u3dQY6CMBSAYWm8ge7deQnXnNq1t/EQLkyIMSjEmPY9+n3LySSM5Z9SaGYYDufTDuYUQ4A4EAfiQByIA3EgDsSBOBAHiANxIA7EgTgQB+JAHIgDcYA4EAfiQByIA3EgDsSBOBAHiANxIA7EgTgQB+JAHIgDcSAOEAfiQByIA3EgDsSBOBAH/dk3PPb9enEC1jiOtybHHZq8AFAWKRIpysii/rgVZegjRBzKyDWGRRn6cCtL1DhMGxnH08yBOBAH4qCGfcwf6+1RsfWsmWO+jF27nSdxRC9DH+JYLkAf/a451pz743hbXH+kbijU6srdCuJAHIiDzuJYsxbzNKzfmeP7uVdG75eVTwUoQxzzHSijiaAbb2owcyAOxIE1R3TWK2YOxIE4EAfiQByIA3GAOBAH4kAciANxkMEGt+xf/1b2uX0/fWXazY//PWYOXFYQB+JAHIjDECAOxIE4EAfiQByIA3EgDsQB4kAciANxIA7EQQ7D4XyqcBj/4e/vKrytzMyBOAgbh7d+ZhxPMwcB4jB5pBvJsslPpYyUlxV9JBq9svlPqIyfVXoINsuTseC/Ti3jwN0K4kAciAPEgTgQB+JAHIgDcSAOxIE4EAeIA3EgDsSBOBAH4kAciANxgDgQB+JAHIgDcSAOxIE4EAeIA3EgDsSBOBAH4kAciANxIA4QB+JAHIiDRh5iJnHOT9yNIAAAAABJRU5ErkJggg==">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACDklEQVR42u3dQY6CMBSAYWm8ge7deQnXnNq1t/EQLkyIMSjEmPY9+n3LySSM5Z9SaGYYDufTDuYUQ4A4EAfiQByIA3EgDsSBOBAHiANxIA7EgTgQB+JAHIgDcYA4EAfiQByIA3EgDsSBOBAHiANxIA7EgTgQB+JAHIgDcSAOEAfiQByIA3EgDsSBOBAH/dk3PPb9enEC1jiOtybHHZq8AFAWKRIpysii/rgVZegjRBzKyDWGRRn6cCtL1DhMGxnH08yBOBAH4qCGfcwf6+1RsfWsmWO+jF27nSdxRC9DH+JYLkAf/a451pz743hbXH+kbijU6srdCuJAHIiDzuJYsxbzNKzfmeP7uVdG75eVTwUoQxzzHSijiaAbb2owcyAOxIE1R3TWK2YOxIE4EAfiQByIA3GAOBAH4kAciANxkMEGt+xf/1b2uX0/fWXazY//PWYOXFYQB+JAHIjDECAOxIE4EAfiQByIA3EgDsQB4kAciANxIA7EQQ7D4XyqcBj/4e/vKrytzMyBOAgbh7d+ZhxPMwcB4jB5pBvJsslPpYyUlxV9JBq9svlPqIyfVXoINsuTseC/Ti3jwN0K4kAciAPEgTgQB+JAHIgDcSAOxIE4EAeIA3EgDsSBOBAH4kAciANxgDgQB+JAHIgDcSAOxIE4EAeIA3EgDsSBOBAH4kAciANxIA4QB+JAHIiDRh5iJnHOT9yNIAAAAABJRU5ErkJggg==">
+<title>Trolley Total</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one-screen phone app. Running total on top, trolley list scrolls, scan button anchored at the bottom. */
+:root{
+  --bg:#F3F5F1; --surface:#FFFFFF; --ink:#13261F; --muted:#55655D; --line:#DCE2DD; --track:#E2E8E3;
+  --accent:#1D7550; --accent-soft:#E1F3E9; --tag:#FFE15A; --tag-ink:#13261F;
+  --warn:#AD3709; --warn-soft:#FCEBE2;
+  --primary-bg:#13261F; --primary-fg:#FFFFFF; --primary-icon:#FFE15A;
+  --scrim:rgba(10,20,16,.45);
+  --font-body:'Manrope', ui-sans-serif, -apple-system, 'Segoe UI', sans-serif;
+  --font-num:'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0D1612; --surface:#16231D; --ink:#EDF3EF; --muted:#9DB0A6; --line:#2A3B33; --track:#24342C;
+    --accent:#6FD9A4; --accent-soft:#163A2A;
+    --warn:#FF9C70; --warn-soft:#3A1D10;
+    --primary-bg:#FFE15A; --primary-fg:#13261F; --primary-icon:#13261F;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select,label{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+
+.app{height:100%;max-width:560px;margin:0 auto;padding-inline:16px;display:flex;flex-direction:column}
+
+.top{padding-block:14px 12px;display:flex;flex-direction:column;gap:12px}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:2px}
+.ghost{border:0;background:transparent;color:var(--muted);font-size:14px;font-weight:600;min-height:44px;min-width:44px;padding:0 6px;display:flex;align-items:center;justify-content:center}
+.ghost.armed{color:var(--warn)}
+.total{display:flex;align-items:baseline;gap:8px;font-weight:700;line-height:1.05}
+.total .cur{font-family:var(--font-body);font-size:20px;font-weight:800;color:var(--muted)}
+.total .amt{font-size:clamp(40px,12vw,52px);letter-spacing:-.02em}
+.sub{font-size:14px;color:var(--muted)}
+
+.budget{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.budget-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.budget label{font-size:14px;font-weight:600}
+.budget input{width:132px;text-align:right;font-family:var(--font-num);font-weight:700;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+.bar{height:10px;background:var(--track);border-radius:999px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .3s ease}
+.bar.over span{background:var(--warn)}
+.remain{font-size:14px;font-weight:700;color:var(--accent)}
+.remain.over{color:var(--warn)}
+.remain.none{color:var(--muted);font-weight:500}
+
+.list{flex:1;min-height:0;overflow-y:auto;list-style:none;margin:0;padding:4px 0 16px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;gap:4px;padding:4px 6px 4px 4px}
+.item-main{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:10px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item-text{min-width:0;display:flex;flex-direction:column;gap:2px}
+.item-name{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.item-each{font-size:13px;color:var(--muted)}
+.item-line{font-weight:700;font-size:16px;white-space:nowrap}
+.stepper{display:flex;align-items:center;background:var(--bg);border-radius:12px;flex-shrink:0}
+.stepper button{width:40px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.stepper .q{min-width:22px;text-align:center;font-weight:700}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:12px 8px 24px}
+.mini-tag{background:var(--tag);color:var(--tag-ink);border-radius:6px;padding:10px 14px;transform:rotate(-3deg);display:flex;flex-direction:column;gap:2px;text-align:left;box-shadow:0 8px 20px rgba(19,38,31,.18)}
+.mini-tag small{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.mini-tag b{font-family:var(--font-num);font-size:26px;line-height:1}
+.mini-tag i{display:block;height:14px;margin-top:4px;background:repeating-linear-gradient(90deg,var(--tag-ink) 0 2px,transparent 2px 4px,var(--tag-ink) 4px 5px,transparent 5px 8px)}
+.empty h2{margin:6px 0 0;font-size:19px;text-wrap:balance}
+.empty ol{margin:0;padding-left:20px;text-align:left;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:4px;max-width:30ch}
+
+.foot{padding-block:12px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.scan{height:60px;border:0;border-radius:18px;background:var(--primary-bg);color:var(--primary-fg);font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px;user-select:none;width:100%}
+.scan svg{stroke:var(--primary-icon)}
+.scan:active{transform:scale(.99)}
+.foot-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.link-btn{min-height:44px;border:0;background:transparent;color:var(--accent);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:12px}
+
+/* Scanner */
+.scanner{position:fixed;inset:0;z-index:15;background:#000;display:flex;flex-direction:column;color:#fff}
+.scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scan-top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px}
+.round{width:44px;height:44px;border-radius:22px;border:0;background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center}
+.scan-title{font-weight:700;font-size:16px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.scan-mid{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;pointer-events:none}
+.frame{position:relative;width:min(82vw,360px);aspect-ratio:4/3;max-width:100%}
+.frame i{position:absolute;width:36px;height:36px;border-color:#FFE15A;border-style:solid;border-width:0}
+.frame i:nth-child(1){left:0;top:0;border-left-width:4px;border-top-width:4px;border-top-left-radius:14px}
+.frame i:nth-child(2){right:0;top:0;border-right-width:4px;border-top-width:4px;border-top-right-radius:14px}
+.frame i:nth-child(3){left:0;bottom:0;border-left-width:4px;border-bottom-width:4px;border-bottom-left-radius:14px}
+.frame i:nth-child(4){right:0;bottom:0;border-right-width:4px;border-bottom-width:4px;border-bottom-right-radius:14px}
+.hint{background:rgba(0,0,0,.5);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600}
+.scan-bot{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;padding:14px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+.shutter{justify-self:center;width:80px;height:80px;border-radius:40px;border:4px solid #fff;background:transparent;padding:5px}
+.shutter span{display:block;width:100%;height:100%;border-radius:999px;background:#FFE15A}
+.shutter:active span{transform:scale(.92)}
+.scan-side{justify-self:start;border:0;background:rgba(0,0,0,.45);color:#fff;border-radius:12px;padding:8px 10px;font-size:13px;font-weight:700;min-height:44px;display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.scan-side small{font-weight:600;opacity:.8}
+.scan-alt{justify-self:end;border:0;background:rgba(0,0,0,.45);color:#fff;border-radius:12px;padding:0 12px;font-size:14px;font-weight:700;min-height:44px;display:flex;align-items:center;cursor:pointer}
+
+/* Sheets */
+.sheet-wrap{position:fixed;inset:0;z-index:20}
+.scrim{position:absolute;inset:0;background:var(--scrim);border:0;width:100%;padding:0}
+.sheet{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:94%;overflow-y:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:rise .22s ease-out}
+@keyframes rise{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet h2{margin:0;font-size:20px;font-weight:800}
+.photo-row{display:flex;gap:12px;align-items:center}
+.photo-row img{width:84px;height:84px;object-fit:cover;border-radius:12px;background:var(--track);flex-shrink:0}
+.status{flex:1;min-width:0;font-size:14px;font-weight:600;border-radius:12px;padding:10px 12px;background:var(--bg);color:var(--muted);display:flex;align-items:center;gap:8px}
+.status.ok{background:var(--accent-soft);color:var(--accent)}
+.status.warn{background:var(--warn-soft);color:var(--warn)}
+.spin{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.field .lbl{font-size:13px;font-weight:700;color:var(--muted)}
+.field input,.field select{height:50px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--bg);font-size:17px;min-width:0;width:100%}
+.field input.price{font-family:var(--font-num);font-weight:700;font-size:20px}
+.field input.key{font-family:var(--font-num);font-size:15px}
+.field input[aria-invalid="true"]{border-color:var(--warn)}
+.help{font-size:13px;color:var(--muted);margin:0;line-height:1.5}
+.help b{color:var(--ink)}
+.err{font-size:13px;color:var(--warn);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.qty{height:50px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.qty button{width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center}
+.qty output{font-family:var(--font-num);font-weight:700;font-size:20px}
+.newtotal{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;color:var(--muted)}
+.newtotal b{color:var(--ink);font-size:20px}
+.actions{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.btn{height:56px;border-radius:16px;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.btn.secondary{border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{border:0;background:var(--primary-bg);color:var(--primary-fg)}
+.danger{border:0;background:transparent;color:var(--warn);font-weight:700;min-height:44px}
+.retake{border:0;background:transparent;font-size:14px;font-weight:700;color:var(--accent);min-height:44px;padding:0 4px}
+
+.toast{position:fixed;left:16px;right:16px;bottom:calc(150px + env(safe-area-inset-bottom,0px));margin:0 auto;max-width:528px;background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 8px 8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:15px;z-index:30;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.toast span{padding:8px 0}
+.toast button{border:0;background:transparent;color:var(--tag);font-weight:800;min-height:40px;padding:0 10px}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="top-row">
+      <div class="eyebrow">Trolley total</div>
+      <div class="top-actions">
+        <button id="clear" class="ghost" type="button" hidden>Clear all</button>
+        <button id="openSettings" class="ghost" type="button" aria-label="Settings">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div aria-live="polite">
+      <div class="total"><span class="cur">Rs</span><span id="total" class="amt num">0</span></div>
+      <div id="count" class="sub">Nothing in the trolley yet</div>
+    </div>
+    <div class="budget">
+      <div class="budget-row">
+        <label for="budget">Budget (Rs)</label>
+        <input id="budget" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 15000">
+      </div>
+      <div id="bar" class="bar" aria-hidden="true"><span></span></div>
+      <div id="remain" class="remain none">Set a budget to see what is left to spend</div>
+    </div>
+  </header>
+
+  <ul id="list" class="list" aria-label="Items in your trolley"></ul>
+
+  <div id="empty" class="empty">
+    <div class="mini-tag" aria-hidden="true"><small>Shelf price</small><b>Rs 360</b><i></i></div>
+    <h2>Scan your first price tag</h2>
+    <ol>
+      <li>Tap Scan price tag.</li>
+      <li>Fit the shelf label in the frame and tap the shutter.</li>
+      <li>Check the name and price, then add it.</li>
+    </ol>
+  </div>
+
+  <footer class="foot">
+    <button id="scanBtn" class="scan" type="button">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M7 12h10"/></svg>
+      Scan price tag
+    </button>
+    <input id="cam" type="file" accept="image/*" capture="environment" hidden>
+    <input id="lib" type="file" accept="image/*" hidden>
+    <div class="foot-row">
+      <button id="manual" class="link-btn" type="button">Type an item</button>
+      <label class="link-btn" for="lib">Use a saved photo</label>
+    </div>
+  </footer>
+</div>
+
+<!-- Live scanner -->
+<div id="scanner" class="scanner" hidden>
+  <video id="video" playsinline muted autoplay></video>
+  <div class="scan-top">
+    <button id="closeScan" class="round" type="button" aria-label="Close scanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="scan-title">Scan price tag</div>
+    <div style="width:44px"></div>
+  </div>
+  <div class="scan-mid">
+    <div class="frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div id="scanHint" class="hint">Fit the price label inside the frame</div>
+  </div>
+  <div class="scan-bot">
+    <button id="scanTotal" class="scan-side" type="button"><small>Trolley</small><span id="scanTotalAmt" class="num">Rs 0</span></button>
+    <button id="shutter" class="shutter" type="button" aria-label="Take photo of price tag"><span></span></button>
+    <label class="scan-alt" for="cam">Camera app</label>
+  </div>
+</div>
+
+<!-- Add / edit item -->
+<div id="sheetWrap" class="sheet-wrap" hidden>
+  <button id="scrim" class="scrim" type="button" aria-label="Close"></button>
+  <form id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" novalidate>
+    <div class="sheet-head">
+      <h2 id="sheetTitle">Check and add</h2>
+      <button id="retake" class="retake" type="button" hidden>Retake</button>
+    </div>
+    <div id="photoRow" class="photo-row" hidden>
+      <img id="photo" alt="Your photo of the price tag">
+      <div id="status" class="status" role="status"></div>
+    </div>
+    <div class="field">
+      <label for="fName">Item</label>
+      <input id="fName" type="text" autocomplete="off" placeholder="e.g. Eggs, dozen" maxlength="60">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="fPrice">Price each (Rs)</label>
+        <input id="fPrice" class="price" type="text" inputmode="decimal" autocomplete="off" placeholder="0">
+      </div>
+      <div class="field">
+        <span class="lbl" id="qtyLbl">Quantity</span>
+        <div class="qty" role="group" aria-labelledby="qtyLbl">
+          <button id="qDec" type="button" aria-label="Decrease quantity"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+          <output id="fQty">1</output>
+          <button id="qInc" type="button" aria-label="Increase quantity"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div id="priceErr" class="err" hidden>Enter a price above 0.</div>
+    <div class="newtotal"><span>New trolley total</span><b id="newTotal" class="num">Rs 0</b></div>
+    <div class="actions">
+      <button id="cancel" class="btn secondary" type="button">Cancel</button>
+      <button id="submit" class="btn primary" type="submit">Add to trolley</button>
+    </div>
+    <button id="remove" class="danger" type="button" hidden>Remove from trolley</button>
+  </form>
+</div>
+
+<!-- Settings -->
+<div id="setWrap" class="sheet-wrap" hidden>
+  <button id="setScrim" class="scrim" type="button" aria-label="Close"></button>
+  <form id="setForm" class="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle" novalidate>
+    <div class="sheet-head"><h2 id="setTitle">Price reading</h2></div>
+    <p id="setIntro" class="help">An AI model reads each price tag photo. Paste your key once; it stays saved on this phone only.</p>
+    <div class="field">
+      <label for="provider">Service</label>
+      <select id="provider">
+        <option value="gemini">Google Gemini (free)</option>
+        <option value="claude">Claude by Anthropic (paid)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label id="keyLbl" for="apiKey">Gemini API key</label>
+      <input id="apiKey" class="key" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AQ.... or AIza...">
+    </div>
+    <p id="keyHelp" class="help"></p>
+    <div class="field">
+      <label for="model">Reader</label>
+      <select id="model"></select>
+    </div>
+    <div id="setErr" class="err" hidden></div>
+    <div class="actions">
+      <button id="setCancel" class="btn secondary" type="button">Close</button>
+      <button id="setSave" class="btn primary" type="submit">Save</button>
+    </div>
+    <button id="forgetKey" class="danger" type="button" hidden>Remove key from this phone</button>
+  </form>
+</div>
+
+<div id="toast" class="toast" role="status" hidden><span id="toastMsg"></span><button id="toastAct" type="button" hidden>Undo</button></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const KEY = 'trolley-total.v1';
+  const SET_KEY = 'trolley-total.settings.v1';
+
+  function readJSON(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  const loaded = readJSON(KEY);
+  const state = loaded && Array.isArray(loaded.items) ? loaded : { items: [], budget: '', nextId: 1 };
+  const PROVIDERS = {
+    gemini: {
+      keyLabel: 'Gemini API key',
+      placeholder: 'AQ.... or AIza...',
+      keyPattern: /^(AIza[0-9A-Za-z_\-]{20,}|AQ\.[0-9A-Za-z_\-.]{20,})$/,
+      keyHint: 'That does not look like a Gemini key. It starts with AQ. or AIza. Copy it again with the copy button in AI Studio.',
+      help: 'Free, no card needed. Get a key at <b>aistudio.google.com</b>: sign in with Google, tap Get API key, then Create API key. The free tier has a limit on scans per minute and per day, and Google may use free-tier requests to improve its products.',
+      models: [
+        ['gemini-flash-latest', 'Most accurate (Gemini Flash)'],
+        ['gemini-3.5-flash-lite', 'Fastest (Gemini Flash-Lite)']
+      ]
+    },
+    claude: {
+      keyLabel: 'Anthropic API key',
+      placeholder: 'sk-ant-...',
+      keyPattern: /^sk-ant-/,
+      keyHint: 'That does not look like an Anthropic key. It starts with sk-ant-.',
+      help: 'Paid, needs a card. Get a key at <b>console.anthropic.com</b> under Settings, API keys, and set a monthly spend limit. Each scan costs a small fraction of a US cent.',
+      models: [
+        ['claude-haiku-5-5', 'Fast (Claude Haiku)'],
+        ['claude-sonnet-5-5', 'Most accurate (Claude Sonnet)']
+      ]
+    }
+  };
+
+  const rawSet = readJSON(SET_KEY) || {};
+  const settings = {
+    provider: rawSet.provider || (rawSet.apiKey ? 'claude' : 'gemini'),
+    keys: Object.assign({ gemini: '', claude: '' }, rawSet.keys || {}),
+    models: Object.assign({ gemini: 'gemini-flash-latest', claude: 'claude-haiku-5-5' }, rawSet.models || {})
+  };
+  if (rawSet.apiKey && !settings.keys.claude) settings.keys.claude = rawSet.apiKey;
+  if (rawSet.model && /^claude/.test(rawSet.model)) settings.models.claude = rawSet.model;
+  const currentKey = () => settings.keys[settings.provider] || '';
+  const save = () => writeJSON(KEY, state);
+  const saveSettings = () => writeJSON(SET_KEY, settings);
+
+  const num = (v) => {
+    const n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.]/g, ''));
+    return isFinite(n) ? n : 0;
+  };
+  const money = (n) => (Math.round(n * 100) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const rs = (n) => 'Rs ' + money(n);
+  const totalOf = () => state.items.reduce((a, it) => a + it.price * it.qty, 0);
+
+  /* ---------- Claude API ---------- */
+  const SYSTEM = [
+    'You read supermarket and shop price tags from phone photos taken in Pakistan. Prices are in Pakistani rupees, written Rs, Rs., PKR, or as a number ending in /-.',
+    'Report the price the shopper pays for ONE unit of the product the tag is for.',
+    'If the tag shows an old price and a new, sale or discounted price, the price is the new one; put the crossed-out or higher old price in old_price.',
+    'If the tag shows a pack price and also a price per kg, per litre, per 100 g or per 100 ml, the price is the pack price.',
+    'Ignore barcodes, item codes, dates and shelf numbers. Read the digits exactly; do not guess digits you cannot see.',
+    'If several different tags are visible, use the one nearest the centre of the photo.',
+    'Name: short and plain, brand if visible, then product and size, e.g. "Dalda cooking oil 3 L". At most 40 characters. Keep Urdu-only names transliterated into English letters.'
+  ].join('\n');
+
+  const TOOL = {
+    name: 'record_price',
+    description: 'Record what the price tag in the photo says.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        found: { type: 'boolean', description: 'true if a price for one item could be read with confidence' },
+        name: { type: 'string', description: 'Short product name, at most 40 characters; empty if unreadable' },
+        price: { type: ['number', 'null'], description: 'Price in rupees the shopper pays for one unit; null if not readable' },
+        old_price: { type: ['number', 'null'], description: 'Crossed-out or previous price if shown, else null' },
+        problem: { type: 'string', description: 'If found is false, a few words on why, e.g. too blurry, no price visible' }
+      },
+      required: ['found', 'name', 'price']
+    }
+  };
+
+  class ReadError extends Error {
+    constructor(kind, message) { super(message); this.kind = kind; }
+  }
+
+  async function readWithClaude(base64, signal) {
+    let resp;
+    try {
+      resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        signal,
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': settings.keys.claude,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: settings.models.claude,
+          max_tokens: 300,
+          system: SYSTEM + '\nAlways answer by calling record_price.',
+          tools: [TOOL],
+          tool_choice: { type: 'tool', name: 'record_price' },
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+              { type: 'text', text: 'Read this price tag.' }
+            ]
+          }]
+        })
+      });
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw e;
+      throw new ReadError('network', 'No internet connection reached Claude. Check your signal, then retake or type the price.');
+    }
+    let body = null;
+    try { body = await resp.json(); } catch (e) {}
+    if (!resp.ok) {
+      const t = body && body.error && body.error.type;
+      const msg = (body && body.error && body.error.message) || '';
+      if (resp.status === 401 || t === 'authentication_error') throw new ReadError('key', 'Claude did not accept your API key. Open Settings and paste it again.');
+      if (resp.status === 403 || t === 'permission_error') throw new ReadError('key', 'Your API key is not allowed to use this reader. Check the key in Settings.');
+      if (resp.status === 404 || t === 'not_found_error') throw new ReadError('model', 'That reader model is not available on your account. Pick the other one in Settings.');
+      if (resp.status === 429 || t === 'rate_limit_error') throw new ReadError('busy', 'Too many scans in a short time. Wait a few seconds and retake.');
+      if (resp.status === 529 || t === 'overloaded_error') throw new ReadError('busy', 'Claude is busy right now. Retake in a moment, or type the price.');
+      if (/credit|billing|balance/i.test(msg)) throw new ReadError('billing', 'Your Anthropic account is out of credit. Add credit at console.anthropic.com.');
+      throw new ReadError('other', 'Claude could not read this one (' + resp.status + '). Retake or type the price.');
+    }
+    const block = body && Array.isArray(body.content) ? body.content.find((b) => b.type === 'tool_use') : null;
+    const r = block && block.input ? block.input : {};
+    return {
+      found: !!r.found,
+      name: r.name ? String(r.name).trim().slice(0, 60) : '',
+      price: r.price != null ? num(r.price) : 0,
+      oldPrice: r.old_price != null ? num(r.old_price) : 0,
+      problem: r.problem ? String(r.problem).slice(0, 50) : ''
+    };
+  }
+
+  const GEMINI_SCHEMA = {
+    type: 'OBJECT',
+    properties: {
+      found: { type: 'BOOLEAN', description: 'true if a price for one item could be read with confidence' },
+      name: { type: 'STRING', description: 'Short product name, at most 40 characters; empty if unreadable' },
+      price: { type: 'NUMBER', nullable: true, description: 'Price in rupees the shopper pays for one unit; null if not readable' },
+      old_price: { type: 'NUMBER', nullable: true, description: 'Crossed-out or previous price if shown, else null' },
+      problem: { type: 'STRING', description: 'If found is false, a few words on why, e.g. too blurry, no price visible' }
+    },
+    required: ['found', 'name', 'price']
+  };
+
+  async function callGemini(model, base64, signal, withThinking) {
+    const generationConfig = {
+      responseMimeType: 'application/json',
+      responseSchema: GEMINI_SCHEMA,
+      temperature: 0,
+      maxOutputTokens: 2048
+    };
+    if (withThinking) generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+    let resp;
+    try {
+      resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+        method: 'POST',
+        signal,
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': settings.keys.gemini },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM + '\nAnswer only with the JSON object described by the schema.' }] },
+          contents: [{ role: 'user', parts: [
+            { inlineData: { mimeType: 'image/jpeg', data: base64 } },
+            { text: 'Read this price tag.' }
+          ] }],
+          generationConfig
+        })
+      });
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw e;
+      throw new ReadError('network', 'No internet connection reached Google. Check your signal, then retake or type the price.');
+    }
+    let body = null;
+    try { body = await resp.json(); } catch (e) {}
+    return { resp, body };
+  }
+
+  async function readWithGemini(base64, signal) {
+    const primary = settings.models.gemini;
+    const other = PROVIDERS.gemini.models.map((m) => m[0]).find((m) => m !== primary);
+    let model = primary;
+    let { resp, body } = await callGemini(model, base64, signal, true);
+    const errOf = (b) => (b && b.error) || {};
+    const keyProblem = (b) => /API_KEY|api key/i.test(JSON.stringify(errOf(b)));
+
+    // Unknown thinking setting on this model: ask again without it.
+    if (resp.status === 400 && !keyProblem(body) && /think/i.test(errOf(body).message || '')) {
+      ({ resp, body } = await callGemini(model, base64, signal, false));
+    }
+    // Model not available on this key: try the other free model once.
+    if ((resp.status === 404 || (resp.status === 400 && /model/i.test(errOf(body).message || '') && !keyProblem(body))) && other) {
+      model = other;
+      ({ resp, body } = await callGemini(model, base64, signal, false));
+      if (resp.ok) { settings.models.gemini = model; saveSettings(); }
+    }
+
+    if (!resp.ok) {
+      const e = errOf(body);
+      if (keyProblem(body) || resp.status === 401) throw new ReadError('key', 'Google did not accept your API key. Open Settings and paste it again.');
+      if (resp.status === 403) throw new ReadError('key', 'Your key is not allowed to use Gemini. Create a new key in Google AI Studio.');
+      if (resp.status === 429) throw new ReadError('busy', 'Free scan limit reached for now. Wait a minute and retake, or type the price.');
+      if (resp.status === 503 || resp.status === 500) throw new ReadError('busy', 'Gemini is busy right now. Retake in a moment, or type the price.');
+      throw new ReadError('other', 'Gemini could not read this one (' + resp.status + (e.status ? ' ' + e.status : '') + '). Retake or type the price.');
+    }
+
+    const cand = body && body.candidates && body.candidates[0];
+    const parts = (cand && cand.content && cand.content.parts) || [];
+    const text = parts.filter((p) => !p.thought && typeof p.text === 'string').map((p) => p.text).join('');
+    let r = {};
+    try {
+      r = JSON.parse(text);
+    } catch (e) {
+      const m = text.match(/\{[\s\S]*\}/);
+      try { r = m ? JSON.parse(m[0]) : {}; } catch (e2) { r = {}; }
+    }
+    return {
+      found: !!r.found,
+      name: r.name ? String(r.name).trim().slice(0, 60) : '',
+      price: r.price != null ? num(r.price) : 0,
+      oldPrice: r.old_price != null ? num(r.old_price) : 0,
+      problem: r.problem ? String(r.problem).slice(0, 50) : (cand && cand.finishReason && cand.finishReason !== 'STOP' ? 'blocked or cut short' : '')
+    };
+  }
+
+  const readPrice = (base64, signal) =>
+    settings.provider === 'claude' ? readWithClaude(base64, signal) : readWithGemini(base64, signal);
+
+  /* ---------- Images ---------- */
+  function canvasFromSource(src, w, h) {
+    const max = 1280;
+    const scale = Math.min(1, max / Math.max(w, h));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * scale));
+    c.height = Math.max(1, Math.round(h * scale));
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+  function fromCanvas(c) {
+    const url = c.toDataURL('image/jpeg', 0.85);
+    return { preview: url, base64: url.slice(url.indexOf(',') + 1) };
+  }
+  async function fromFile(file) {
+    const dataUrl = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = dataUrl;
+    });
+    return fromCanvas(canvasFromSource(img, img.naturalWidth, img.naturalHeight));
+  }
+
+  /* ---------- Live scanner ---------- */
+  let stream = null;
+  let lastScanFrom = 'live';
+
+  async function openScanner() {
+    if (!currentKey()) { openSettings(true); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('cam').click(); return; }
+    $('scanTotalAmt').textContent = rs(totalOf());
+    $('scanHint').textContent = 'Starting camera…';
+    $('scanner').hidden = false;
+    try {
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+      }
+      const v = $('video');
+      v.srcObject = stream;
+      await v.play().catch(() => {});
+      $('scanHint').textContent = 'Fit the price label inside the frame';
+    } catch (e) {
+      closeScanner();
+      toast('Camera not allowed here, opening the Camera app instead');
+      $('cam').click();
+    }
+  }
+  function stopStream() {
+    if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+    $('video').srcObject = null;
+  }
+  function closeScanner() {
+    $('scanner').hidden = true;
+    stopStream();
+  }
+  function capture() {
+    const v = $('video');
+    if (!v.videoWidth) return;
+    const shot = fromCanvas(canvasFromSource(v, v.videoWidth, v.videoHeight));
+    lastScanFrom = 'live';
+    closeScanner();
+    readShot(shot);
+  }
+
+  /* ---------- Sheet ---------- */
+  const sheet = { mode: 'manual', id: null, ctl: null, qty: 1, dirtyName: false, dirtyPrice: false };
+
+  function setStatus(text, kind) {
+    const el = $('status');
+    el.className = 'status' + (kind && kind !== 'busy' ? ' ' + kind : '');
+    el.textContent = '';
+    if (kind === 'busy') {
+      const s = document.createElement('span');
+      s.className = 'spin';
+      s.setAttribute('aria-hidden', 'true');
+      el.appendChild(s);
+    }
+    el.appendChild(document.createTextNode(text));
+  }
+
+  function openSheet(mode, opts) {
+    opts = opts || {};
+    if (sheet.ctl) sheet.ctl.abort();
+    sheet.ctl = null;
+    sheet.mode = mode;
+    sheet.id = opts.id || null;
+    sheet.dirtyName = false;
+    sheet.dirtyPrice = false;
+    $('priceErr').hidden = true;
+    $('fPrice').removeAttribute('aria-invalid');
+    const item = mode === 'edit' ? state.items.find((x) => x.id === sheet.id) : null;
+    $('fName').value = item ? item.name : '';
+    $('fPrice').value = item ? String(item.price) : '';
+    sheet.qty = item ? item.qty : 1;
+    $('sheetTitle').textContent = mode === 'scan' ? 'Check and add' : mode === 'edit' ? 'Edit item' : 'Add an item';
+    $('submit').textContent = mode === 'edit' ? 'Save' : 'Add to trolley';
+    $('remove').hidden = mode !== 'edit';
+    $('photoRow').hidden = mode !== 'scan';
+    $('retake').hidden = mode !== 'scan';
+    $('sheetWrap').hidden = false;
+    updateSheet();
+    if (mode === 'manual') setTimeout(() => $('fName').focus(), 50);
+  }
+  function closeSheet() {
+    if (sheet.ctl) sheet.ctl.abort();
+    sheet.ctl = null;
+    $('sheetWrap').hidden = true;
+  }
+  function updateSheet() {
+    $('fQty').textContent = String(sheet.qty);
+    const price = num($('fPrice').value);
+    let base = totalOf();
+    if (sheet.mode === 'edit') {
+      const it = state.items.find((x) => x.id === sheet.id);
+      if (it) base -= it.price * it.qty;
+    }
+    $('newTotal').textContent = rs(base + price * sheet.qty);
+  }
+
+  async function readShot(shot) {
+    openSheet('scan');
+    $('photo').src = shot.preview;
+    if (!currentKey()) {
+      setStatus('Add your key in Settings to read prices. Type it for now.', 'warn');
+      return;
+    }
+    setStatus((settings.provider === 'claude' ? 'Claude' : 'Gemini') + ' is reading the price…', 'busy');
+    const ctl = new AbortController();
+    sheet.ctl = ctl;
+    const timer = setTimeout(() => ctl.abort(), 30000);
+    const t0 = performance.now();
+    try {
+      const r = await readPrice(shot.base64, ctl.signal);
+      if (sheet.ctl !== ctl) return;
+      sheet.ctl = null;
+      if (r.name && !sheet.dirtyName) $('fName').value = r.name;
+      if (r.found && r.price > 0) {
+        if (!sheet.dirtyPrice) $('fPrice').value = String(r.price);
+        const secs = ((performance.now() - t0) / 1000).toFixed(1);
+        const was = r.oldPrice > r.price ? ' Was ' + rs(r.oldPrice) + '.' : '';
+        setStatus('Read in ' + secs + ' s.' + was + ' Check it matches.', 'ok');
+      } else {
+        setStatus('No clear price' + (r.problem ? ' (' + r.problem + ')' : '') + '. Retake closer, or type it.', 'warn');
+      }
+    } catch (e) {
+      if (sheet.ctl !== ctl) return;
+      sheet.ctl = null;
+      if (e && e.name === 'AbortError') {
+        setStatus('That took too long. Retake, or type the price.', 'warn');
+      } else {
+        setStatus(e && e.message ? e.message : 'Could not read this photo. Type the price.', 'warn');
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+    updateSheet();
+  }
+
+  function submitSheet(ev) {
+    ev.preventDefault();
+    const price = num($('fPrice').value);
+    if (!(price > 0)) {
+      $('priceErr').hidden = false;
+      $('fPrice').setAttribute('aria-invalid', 'true');
+      $('fPrice').focus();
+      return;
+    }
+    const name = $('fName').value.trim() || 'Item';
+    const qty = sheet.qty;
+    const wasScan = sheet.mode === 'scan';
+    if (sheet.mode === 'edit') {
+      const it = state.items.find((x) => x.id === sheet.id);
+      if (it) { it.name = name; it.price = price; it.qty = qty; }
+      closeSheet();
+      commit();
+      toast('Saved ' + name);
+      return;
+    }
+    const match = state.items.find((x) => x.name.toLowerCase() === name.toLowerCase() && x.price === price);
+    if (match) match.qty += qty;
+    else state.items.unshift({ id: state.nextId++, name, price, qty });
+    closeSheet();
+    commit();
+    toast('Added ' + name + (qty > 1 ? ' ×' + qty : ''), wasScan ? { label: 'Scan next', fn: openScanner } : null);
+  }
+
+  /* ---------- Settings ---------- */
+  // Draft values while the Settings sheet is open, so switching service keeps both keys.
+  let draft = null;
+  function showProvider(p) {
+    const cfg = PROVIDERS[p];
+    $('provider').value = p;
+    $('keyLbl').textContent = cfg.keyLabel;
+    $('apiKey').placeholder = cfg.placeholder;
+    $('apiKey').value = draft.keys[p] || '';
+    $('keyHelp').innerHTML = cfg.help;
+    const sel = $('model');
+    sel.textContent = '';
+    cfg.models.forEach(([id, label]) => {
+      const o = document.createElement('option');
+      o.value = id;
+      o.textContent = label;
+      sel.appendChild(o);
+    });
+    sel.value = cfg.models.some((m) => m[0] === draft.models[p]) ? draft.models[p] : cfg.models[0][0];
+    $('forgetKey').hidden = !settings.keys[p];
+    $('setErr').hidden = true;
+  }
+  function openSettings(needKey) {
+    draft = { provider: settings.provider, keys: Object.assign({}, settings.keys), models: Object.assign({}, settings.models) };
+    showProvider(settings.provider);
+    $('setIntro').textContent = needKey
+      ? 'To read price tags, paste a key for the reading service. The Google Gemini key is free. It stays saved on this phone only.'
+      : 'An AI model reads each price tag photo. Your key stays saved on this phone only.';
+    $('setWrap').hidden = false;
+    if (needKey) setTimeout(() => $('apiKey').focus(), 50);
+  }
+  function closeSettings() { $('setWrap').hidden = true; }
+
+  /* ---------- Toast ---------- */
+  let toastTimer = null;
+  let toastFn = null;
+  function toast(msg, action) {
+    clearTimeout(toastTimer);
+    $('toastMsg').textContent = msg;
+    toastFn = action ? action.fn : null;
+    $('toastAct').textContent = action ? action.label : '';
+    $('toastAct').hidden = !action;
+    $('toast').hidden = false;
+    toastTimer = setTimeout(() => { $('toast').hidden = true; toastFn = null; }, action ? 4500 : 2000);
+  }
+  $('toastAct').addEventListener('click', () => {
+    const fn = toastFn;
+    toastFn = null;
+    $('toast').hidden = true;
+    if (fn) fn();
+  });
+
+  function removeItem(id) {
+    const idx = state.items.findIndex((x) => x.id === id);
+    if (idx < 0) return;
+    const [gone] = state.items.splice(idx, 1);
+    commit();
+    toast('Removed ' + gone.name, { label: 'Undo', fn: () => { state.items.splice(Math.min(idx, state.items.length), 0, gone); commit(); } });
+  }
+
+  /* ---------- Render ---------- */
+  const ICON_MINUS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
+  const ICON_PLUS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  const ICON_BIN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+
+  function commit() { save(); render(); }
+
+  function render() {
+    const total = totalOf();
+    const units = state.items.reduce((a, it) => a + it.qty, 0);
+    $('total').textContent = money(total);
+    const n = state.items.length;
+    $('count').textContent = n === 0 ? 'Nothing in the trolley yet'
+      : n + (n === 1 ? ' item' : ' items') + ', ' + units + (units === 1 ? ' piece' : ' pieces');
+    $('clear').hidden = n === 0;
+
+    const budget = num(state.budget);
+    const bar = $('bar'), remain = $('remain');
+    if (budget > 0) {
+      const over = total > budget;
+      bar.classList.toggle('over', over);
+      bar.firstElementChild.style.width = Math.min(100, (total / budget) * 100) + '%';
+      remain.className = 'remain' + (over ? ' over' : '');
+      remain.textContent = over ? rs(total - budget) + ' over budget' : rs(budget - total) + ' left to spend';
+    } else {
+      bar.classList.remove('over');
+      bar.firstElementChild.style.width = '0%';
+      remain.className = 'remain none';
+      remain.textContent = 'Set a budget to see what is left to spend';
+    }
+
+    $('empty').hidden = n !== 0;
+    $('list').hidden = n === 0;
+    const list = $('list');
+    list.textContent = '';
+    state.items.forEach((it) => {
+      const li = document.createElement('li');
+      li.className = 'item';
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'item-main';
+      main.setAttribute('aria-label', 'Edit ' + it.name);
+      const text = document.createElement('span');
+      text.className = 'item-text';
+      const nm = document.createElement('span');
+      nm.className = 'item-name';
+      nm.textContent = it.name;
+      const each = document.createElement('span');
+      each.className = 'item-each';
+      each.textContent = it.qty > 1 ? rs(it.price) + ' each' : 'Tap to edit';
+      text.append(nm, each);
+      const line = document.createElement('span');
+      line.className = 'item-line num';
+      line.textContent = rs(it.price * it.qty);
+      main.append(text, line);
+      main.addEventListener('click', () => openSheet('edit', { id: it.id }));
+
+      const step = document.createElement('div');
+      step.className = 'stepper';
+      const dec = document.createElement('button');
+      dec.type = 'button';
+      dec.innerHTML = it.qty > 1 ? ICON_MINUS : ICON_BIN;
+      dec.setAttribute('aria-label', it.qty > 1 ? 'One less ' + it.name : 'Remove ' + it.name);
+      dec.addEventListener('click', () => { if (it.qty > 1) { it.qty -= 1; commit(); } else removeItem(it.id); });
+      const q = document.createElement('span');
+      q.className = 'q num';
+      q.textContent = String(it.qty);
+      const inc = document.createElement('button');
+      inc.type = 'button';
+      inc.innerHTML = ICON_PLUS;
+      inc.setAttribute('aria-label', 'One more ' + it.name);
+      inc.addEventListener('click', () => { it.qty += 1; commit(); });
+      step.append(dec, q, inc);
+      li.append(main, step);
+      list.appendChild(li);
+    });
+  }
+
+  /* ---------- Wiring ---------- */
+  async function onPick(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    closeScanner();
+    lastScanFrom = 'file';
+    try { readShot(await fromFile(f)); }
+    catch (err) { openSheet('scan'); setStatus('Could not open that photo. Try again or type the price.', 'warn'); }
+  }
+  $('cam').addEventListener('change', onPick);
+  $('lib').addEventListener('change', onPick);
+  $('scanBtn').addEventListener('click', openScanner);
+  $('shutter').addEventListener('click', capture);
+  $('closeScan').addEventListener('click', closeScanner);
+  $('scanTotal').addEventListener('click', closeScanner);
+  $('retake').addEventListener('click', () => { closeSheet(); if (lastScanFrom === 'live') openScanner(); else $('cam').click(); });
+  $('manual').addEventListener('click', () => openSheet('manual'));
+  $('cancel').addEventListener('click', closeSheet);
+  $('scrim').addEventListener('click', closeSheet);
+  $('sheet').addEventListener('submit', submitSheet);
+  $('qDec').addEventListener('click', () => { sheet.qty = Math.max(1, sheet.qty - 1); updateSheet(); });
+  $('qInc').addEventListener('click', () => { sheet.qty += 1; updateSheet(); });
+  $('fName').addEventListener('input', () => { sheet.dirtyName = true; });
+  $('fPrice').addEventListener('input', () => {
+    sheet.dirtyPrice = true;
+    $('priceErr').hidden = true;
+    $('fPrice').removeAttribute('aria-invalid');
+    updateSheet();
+  });
+  $('remove').addEventListener('click', () => { const id = sheet.id; closeSheet(); removeItem(id); });
+
+  $('openSettings').addEventListener('click', () => openSettings(false));
+  $('setCancel').addEventListener('click', closeSettings);
+  $('setScrim').addEventListener('click', closeSettings);
+  $('setForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const p = $('provider').value;
+    const k = $('apiKey').value.replace(/\s+/g, '');
+    if (k && !PROVIDERS[p].keyPattern.test(k)) {
+      $('setErr').textContent = PROVIDERS[p].keyHint;
+      $('setErr').hidden = false;
+      return;
+    }
+    draft.keys[p] = k;
+    draft.models[p] = $('model').value;
+    settings.provider = p;
+    settings.keys = draft.keys;
+    settings.models = draft.models;
+    saveSettings();
+    closeSettings();
+    toast(k ? 'Saved. Tap Scan price tag to start.' : 'Saved');
+  });
+  $('provider').addEventListener('change', () => {
+    const prev = draft.provider;
+    draft.keys[prev] = $('apiKey').value.trim();
+    draft.models[prev] = $('model').value;
+    draft.provider = $('provider').value;
+    showProvider(draft.provider);
+  });
+  $('forgetKey').addEventListener('click', () => {
+    const p = $('provider').value;
+    settings.keys[p] = '';
+    draft.keys[p] = '';
+    saveSettings();
+    $('apiKey').value = '';
+    $('forgetKey').hidden = true;
+    toast('Key removed from this phone');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('setWrap').hidden) closeSettings();
+    else if (!$('sheetWrap').hidden) closeSheet();
+    else if (!$('scanner').hidden) closeScanner();
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && !$('scanner').hidden) closeScanner(); });
+
+  $('budget').value = state.budget || '';
+  $('budget').addEventListener('input', (e) => { state.budget = e.target.value.replace(/[^0-9.]/g, ''); commit(); });
+
+  let clearArmed = null;
+  $('clear').addEventListener('click', () => {
+    const btn = $('clear');
+    if (!clearArmed) {
+      btn.textContent = 'Tap again to clear';
+      btn.classList.add('armed');
+      clearArmed = setTimeout(() => { clearArmed = null; btn.textContent = 'Clear all'; btn.classList.remove('armed'); }, 3000);
+      return;
+    }
+    clearTimeout(clearArmed);
+    clearArmed = null;
+    btn.textContent = 'Clear all';
+    btn.classList.remove('armed');
+    const before = state.items.slice();
+    state.items = [];
+    commit();
+    toast('Trolley cleared', { label: 'Undo', fn: () => { state.items = before; commit(); } });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
